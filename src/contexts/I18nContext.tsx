@@ -1,7 +1,22 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { ptBR } from '../locales/pt-BR';
-import { enUS } from '../locales/en-US';
+// import { ptBR } from '../locales/pt-BR'; REMOVED
+// import { enUS } from '../locales/en-US'; REMOVED
+
+// --- INLINED LOCALES ---
+const ptBR = {
+  nav: { dashboard: "Dashboard", marketplace: "Marketplace", campaigns: "Minhas Campanhas", executions: "Execuções", reports: "Relatórios", payments: "Financeiro", storefront: "Minha Vitrine", settings: "Configurações" },
+  common: { search: "Buscar..." },
+  role: { brand: "Marca", community: "Creator", staff: "Admin" },
+  tooltips: { escrow: "Seu dinheiro fica protegido até o trabalho ser entregue." }
+};
+const enUS = {
+  nav: { dashboard: "Dashboard", marketplace: "Marketplace", campaigns: "My Campaigns", executions: "Executions", reports: "Reports", payments: "Payments", storefront: "Storefront", settings: "Settings" },
+  common: { search: "Search..." },
+  role: { brand: "Brand", community: "Creator", staff: "Admin" },
+  tooltips: { escrow: "Your funds are held safely until work is delivered." }
+};
+// -----------------------
 
 type Language = 'pt-BR' | 'en-US';
 type Translations = typeof ptBR;
