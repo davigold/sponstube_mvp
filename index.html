@@ -1,87 +1,16 @@
-
 <!DOCTYPE html>
 <html lang="en" class="dark">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SponsTube | YouTube Sponsorship OS</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['Roboto', 'sans-serif'], // YouTube uses Roboto
-            },
-            colors: {
-              slate: {
-                850: '#1f1f1f',
-                900: '#0f0f0f', // YouTube Dark Background
-                950: '#050505', 
-              },
-              brand: {
-                500: '#FF0000', // YouTube Red
-                600: '#CC0000',
-              }
-            },
-            backgroundImage: {
-              'glass': 'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.00) 100%)',
-            }
-          }
-        }
-      }
-    </script>
-    <style>
-      body {
-        font-family: 'Roboto', sans-serif;
-        background-color: #0f0f0f; /* YouTube Dark */
-        color: #f1f1f1;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-      }
 
-      /* Custom Scrollbar to match YouTube Studio */
-      ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #717171;
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #a0a0a0;
-      }
-      
-      .animate-fade-in-up {
-        animation: fadeInUp 0.5s ease-out forwards;
-      }
-      
-      @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-    </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.556.0",
-    "react/": "https://aistudiocdn.com/react@^19.2.1/",
-    "react": "https://aistudiocdn.com/react@^19.2.1",
-    "recharts": "https://aistudiocdn.com/recharts@^3.5.1"
-  }
-}
-</script>
-<link rel="stylesheet" href="/index.css">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SponsTube | YouTube Sponsorship OS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 </head>
-  <body>
-    <div id="root" class="relative z-10"></div>
-  <script type="module" src="/index.tsx"></script>
+
+<body class="bg-[#0f0f0f] text-[#f1f1f1] font-sans antialiased selection:bg-brand-500 selection:text-white">
+  <div id="root" class="relative z-10"></div>
+  <script type="module" src="/src/index.tsx"></script>
 </body>
+
 </html>
