@@ -1,15 +1,15 @@
 
 import React, { useMemo } from 'react';
-import { 
-  Rocket, TrendingUp, Users, DollarSign, Activity, PlusCircle, ArrowRight, Star, Zap,
-  LayoutList, Compass, Store, Search, PackagePlus, Megaphone, Edit3, Upload, ShieldCheck, PlayCircle, MousePointer2, Eye,
-  Calendar, CheckCircle2, AlertCircle, Clock, Wallet, BarChart2, Briefcase, Target, Sparkles
+import {
+    Rocket, TrendingUp, Users, DollarSign, Activity, PlusCircle, ArrowRight, Star, Zap,
+    LayoutList, Compass, Store, Search, PackagePlus, Megaphone, Edit3, Upload, ShieldCheck, PlayCircle, MousePointer2, Eye,
+    Calendar, CheckCircle2, AlertCircle, Clock, Wallet, BarChart2, Briefcase, Target, Sparkles
 } from 'lucide-react';
-import { 
-  Button, Card, CardContent, CardHeader, CardTitle, 
-  StatCard, Badge, SectionTitle, EmptyState
+import {
+    Button, Card, CardContent, CardHeader, CardTitle,
+    StatCard, Badge, SectionTitle, EmptyState
 } from '../components/Common';
-import { MOCK_CAMPAIGNS, MOCK_COMMUNITIES, MOCK_BRAND_PACKS } from '../mockData';
+import { useData } from '../contexts/DataContext'; // Switched to Context
 import { Role } from '../types';
 import { useCurrency } from '../contexts/CurrencyContext';
 import StaffDashboard from './StaffDashboard';
@@ -20,17 +20,23 @@ import { useI18n } from '../contexts/I18nContext';
 const BrandHub = () => {
     const { formatCurrency } = useCurrency();
     const { t } = useI18n();
-    const activeCampaigns = MOCK_CAMPAIGNS.filter(c => c.status !== 'draft' && c.status !== 'completed');
-    
+    const { campaigns, isOfflineMode } = useData(); // Get Real Data
+
+    // Filter logic remains the same, but operates on meaningful data now
+    const activeCampaigns = campaigns.filter(c => c.status !== 'draft' && c.status !== 'completed');
+
     // Quick Stats
-    const pendingActions = MOCK_CAMPAIGNS.filter(c => c.status === 'awaiting_report' || c.status === 'applied').length;
+    const pendingActions = campaigns.filter(c => c.status === 'awaiting_report' || c.status === 'applied').length;
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{t('dashboard.title_brand')}</h1>
+                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        {t('dashboard.title_brand')}
+                        {isOfflineMode && <Badge variant="neutral" className="ml-2 bg-slate-200 text-slate-500">Modo Demo (Offline)</Badge>}
+                    </h1>
                     <p className="text-slate-500 dark:text-slate-400 mt-1">{t('dashboard.greeting', { name: 'TechStart' })}</p>
                 </div>
                 <div className="p-1 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-500/30 flex items-center gap-2 px-3">
@@ -43,7 +49,7 @@ const BrandHub = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 space-y-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div 
+                        <div
                             onClick={() => navigateTo('/app/management')}
                             className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-xl shadow-sm hover:border-indigo-500 transition-all cursor-pointer group"
                         >
@@ -57,7 +63,7 @@ const BrandHub = () => {
                             <p className="text-xs text-slate-500 mt-1">Verifique entregas e libere pagamentos.</p>
                         </div>
 
-                        <div 
+                        <div
                             onClick={() => navigateTo('/app/marketplace')}
                             className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-xl shadow-sm hover:border-emerald-500 transition-all cursor-pointer group"
                         >
@@ -105,7 +111,7 @@ const BrandHub = () => {
                         </div>
                         <h3 className="text-lg font-bold mb-2">Canal: Hardware Unboxed BR</h3>
                         <p className="text-indigo-200 text-xs mb-6 leading-relaxed">95% de afinidade com seu objetivo de "Conversão" para público Tech. Alto engajamento em reviews recentes.</p>
-                        
+
                         <div className="mt-auto">
                             <Button size="sm" className="w-full bg-white text-indigo-900 hover:bg-indigo-50 border-transparent" onClick={() => navigateTo('/s/c1')}>
                                 Ver Media Kit
@@ -141,135 +147,142 @@ const BrandHub = () => {
 
 // --- CREATOR DASHBOARD (COCKPIT) ---
 const CreatorHub = () => {
-  const { t } = useI18n();
-  const { formatCurrency } = useCurrency();
-  const myCommunity = MOCK_COMMUNITIES[0];
-  
-  const actionItems = MOCK_CAMPAIGNS.filter(c => ['running', 'approved'].includes(c.status));
+    const { t } = useI18n();
+    const { formatCurrency } = useCurrency();
+    const { communities, campaigns } = useData(); // Real Data
 
-  return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      {/* HEADER */}
-      <div className="flex flex-col md:flex-row justify-between items-center gap-6 pb-6 border-b border-slate-200 dark:border-slate-800">
-         <div className="flex items-center gap-4 w-full md:w-auto">
-            <div className="w-14 h-14 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden ring-2 ring-[#FF0000] ring-offset-2 ring-offset-slate-50 dark:ring-offset-slate-950 relative">
-                <img src={myCommunity.logoUrl || `https://ui-avatars.com/api/?name=${myCommunity.name}&background=FF0000&color=fff`} className="w-full h-full object-cover" />
-                <div className="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" title="Online"></div>
-            </div>
-            <div>
-                <div className="flex items-center gap-2 mb-1">
-                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-                        {myCommunity.name}
-                    </h1>
-                    <Badge variant="brand" className="text-[10px]">Verificado</Badge>
-                </div>
-                <div className="flex items-center gap-3 text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
-                    <span className="flex items-center gap-1"><Users size={12}/> 142k Subs</span>
-                    <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400"><Star size={12}/> 5.0 Rating</span>
-                </div>
-            </div>
-         </div>
-         <div className="flex gap-3 w-full md:w-auto">
-            <Button variant="secondary" icon={<Eye size={16}/>} onClick={() => navigateTo(`/s/${myCommunity.id}`)}>Media Kit</Button>
-            <Button icon={<PlusCircle size={16}/>} className="bg-[#FF0000] hover:bg-[#CC0000] text-white" onClick={() => navigateTo('/app/campaigns?action=create')}>Novo Slot</Button>
-         </div>
-      </div>
+    // For MVP, we assume the logged in user owns the first community in the list
+    const myCommunity = communities[0] || {
+        name: 'Minha Comunidade',
+        logoUrl: '',
+        id: 'demo'
+    };
 
-      {/* URGENT ACTION ITEMS */}
-      {actionItems.length > 0 && (
-        <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-500/20 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-3">
-                <div className="p-2 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-full">
-                    <AlertCircle size={20} />
-                </div>
-                <div>
-                    <h3 className="font-bold text-amber-900 dark:text-amber-300 text-sm">Você tem {actionItems.length} ações pendentes</h3>
-                    <p className="text-xs text-amber-700 dark:text-amber-400">Entregas atrasadas ou aprovações pendentes.</p>
-                </div>
-            </div>
-            <Button size="sm" className="bg-amber-600 hover:bg-amber-500 text-white border-transparent" onClick={() => navigateTo('/app/management')}>
-                Resolver Agora
-            </Button>
-        </div>
-      )}
+    const actionItems = campaigns.filter(c => ['running', 'approved'].includes(c.status));
 
-      {/* MAIN ACTIONS GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-         {/* Card 1: Inventory */}
-         <Card className="hover:border-indigo-500/50 transition-colors cursor-pointer group" onClick={() => navigateTo('/app/campaigns')}>
-            <CardContent className="p-6">
-                <div className="mb-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 w-fit rounded-xl text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform">
-                    <PackagePlus size={24} />
-                </div>
-                <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-1">Gerenciar Slots</h3>
-                <p className="text-xs text-slate-500 mb-4">Atualize datas disponíveis e preços do seu Media Kit.</p>
-                <div className="flex items-center text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                    Acessar Inventário <ArrowRight size={12} className="ml-1" />
-                </div>
-            </CardContent>
-         </Card>
-
-         {/* Card 2: Executions */}
-         <Card className="hover:border-emerald-500/50 transition-colors cursor-pointer group" onClick={() => navigateTo('/app/management')}>
-            <CardContent className="p-6">
-                <div className="mb-4 p-3 bg-emerald-50 dark:bg-emerald-900/20 w-fit rounded-xl text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
-                    <Upload size={24} />
-                </div>
-                <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-1">Entregar Jobs</h3>
-                <p className="text-xs text-slate-500 mb-4">Faça upload de provas e links para receber pagamentos.</p>
-                <div className="flex items-center text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                    Ir para Entregas <ArrowRight size={12} className="ml-1" />
-                </div>
-            </CardContent>
-         </Card>
-
-         {/* Card 3: Analytics */}
-         <Card className="hover:border-amber-500/50 transition-colors cursor-pointer group" onClick={() => navigateTo('/app/reports')}>
-            <CardContent className="p-6">
-                <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 w-fit rounded-xl text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform">
-                    <BarChart2 size={24} />
-                </div>
-                <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-1">Ver Relatórios</h3>
-                <p className="text-xs text-slate-500 mb-4">Acompanhe seu faturamento e crescimento.</p>
-                <div className="flex items-center text-xs font-bold text-amber-600 dark:text-amber-400">
-                    Abrir Analytics <ArrowRight size={12} className="ml-1" />
-                </div>
-            </CardContent>
-         </Card>
-      </div>
-
-      {/* QUICK STATUS TABLE */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
-            <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex justify-between items-center">
-                <h3 className="font-bold text-sm text-slate-700 dark:text-slate-300">Jobs Recentes</h3>
-            </div>
-            <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                {MOCK_CAMPAIGNS.slice(0, 3).map((item, i) => (
-                    <div key={i} className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors cursor-pointer" onClick={() => navigateTo('/app/management')}>
-                        <div className="flex items-center gap-4">
-                            <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500">
-                                {item.status === 'completed' ? <CheckCircle2 size={16} className="text-emerald-500"/> : <Clock size={16} />}
-                            </div>
-                            <div>
-                                <h4 className="text-sm font-bold text-slate-900 dark:text-white">{item.name}</h4>
-                                <p className="text-[10px] text-slate-500 uppercase">{item.status.replace('_', ' ')}</p>
-                            </div>
+    return (
+        <div className="space-y-8 animate-in fade-in duration-500">
+            {/* HEADER */}
+            <div className="flex flex-col md:flex-row justify-between items-center gap-6 pb-6 border-b border-slate-200 dark:border-slate-800">
+                <div className="flex items-center gap-4 w-full md:w-auto">
+                    <div className="w-14 h-14 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden ring-2 ring-[#FF0000] ring-offset-2 ring-offset-slate-50 dark:ring-offset-slate-950 relative">
+                        <img src={myCommunity.logoUrl || `https://ui-avatars.com/api/?name=${myCommunity.name}&background=FF0000&color=fff`} className="w-full h-full object-cover" />
+                        <div className="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" title="Online"></div>
+                    </div>
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+                                {myCommunity.name}
+                            </h1>
+                            <Badge variant="brand" className="text-[10px]">Verificado</Badge>
                         </div>
-                        <div className="text-right">
-                            <p className="text-sm font-bold text-slate-900 dark:text-white">{formatCurrency(item.budgetTotal)}</p>
+                        <div className="flex items-center gap-3 text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
+                            <span className="flex items-center gap-1"><Users size={12} /> 142k Subs</span>
+                            <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400"><Star size={12} /> 5.0 Rating</span>
                         </div>
                     </div>
-                ))}
+                </div>
+                <div className="flex gap-3 w-full md:w-auto">
+                    <Button variant="secondary" icon={<Eye size={16} />} onClick={() => navigateTo(`/s/${myCommunity.id}`)}>Media Kit</Button>
+                    <Button icon={<PlusCircle size={16} />} className="bg-[#FF0000] hover:bg-[#CC0000] text-white" onClick={() => navigateTo('/app/campaigns?action=create')}>Novo Slot</Button>
+                </div>
             </div>
-      </div>
-    </div>
-  );
+
+            {/* URGENT ACTION ITEMS */}
+            {actionItems.length > 0 && (
+                <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-500/20 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-full">
+                            <AlertCircle size={20} />
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-amber-900 dark:text-amber-300 text-sm">Você tem {actionItems.length} ações pendentes</h3>
+                            <p className="text-xs text-amber-700 dark:text-amber-400">Entregas atrasadas ou aprovações pendentes.</p>
+                        </div>
+                    </div>
+                    <Button size="sm" className="bg-amber-600 hover:bg-amber-500 text-white border-transparent" onClick={() => navigateTo('/app/management')}>
+                        Resolver Agora
+                    </Button>
+                </div>
+            )}
+
+            {/* MAIN ACTIONS GRID */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* Card 1: Inventory */}
+                <Card className="hover:border-indigo-500/50 transition-colors cursor-pointer group" onClick={() => navigateTo('/app/campaigns')}>
+                    <CardContent className="p-6">
+                        <div className="mb-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 w-fit rounded-xl text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform">
+                            <PackagePlus size={24} />
+                        </div>
+                        <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-1">Gerenciar Slots</h3>
+                        <p className="text-xs text-slate-500 mb-4">Atualize datas disponíveis e preços do seu Media Kit.</p>
+                        <div className="flex items-center text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                            Acessar Inventário <ArrowRight size={12} className="ml-1" />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Card 2: Executions */}
+                <Card className="hover:border-emerald-500/50 transition-colors cursor-pointer group" onClick={() => navigateTo('/app/management')}>
+                    <CardContent className="p-6">
+                        <div className="mb-4 p-3 bg-emerald-50 dark:bg-emerald-900/20 w-fit rounded-xl text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
+                            <Upload size={24} />
+                        </div>
+                        <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-1">Entregar Jobs</h3>
+                        <p className="text-xs text-slate-500 mb-4">Faça upload de provas e links para receber pagamentos.</p>
+                        <div className="flex items-center text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                            Ir para Entregas <ArrowRight size={12} className="ml-1" />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Card 3: Analytics */}
+                <Card className="hover:border-amber-500/50 transition-colors cursor-pointer group" onClick={() => navigateTo('/app/reports')}>
+                    <CardContent className="p-6">
+                        <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 w-fit rounded-xl text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform">
+                            <BarChart2 size={24} />
+                        </div>
+                        <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-1">Ver Relatórios</h3>
+                        <p className="text-xs text-slate-500 mb-4">Acompanhe seu faturamento e crescimento.</p>
+                        <div className="flex items-center text-xs font-bold text-amber-600 dark:text-amber-400">
+                            Abrir Analytics <ArrowRight size={12} className="ml-1" />
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* QUICK STATUS TABLE */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+                <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex justify-between items-center">
+                    <h3 className="font-bold text-sm text-slate-700 dark:text-slate-300">Jobs Recentes</h3>
+                </div>
+                <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {campaigns.slice(0, 3).map((item, i) => (
+                        <div key={i} className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors cursor-pointer" onClick={() => navigateTo('/app/management')}>
+                            <div className="flex items-center gap-4">
+                                <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500">
+                                    {item.status === 'completed' ? <CheckCircle2 size={16} className="text-emerald-500" /> : <Clock size={16} />}
+                                </div>
+                                <div>
+                                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">{item.name}</h4>
+                                    <p className="text-[10px] text-slate-500 uppercase">{item.status.replace('_', ' ')}</p>
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-sm font-bold text-slate-900 dark:text-white">{formatCurrency(item.budgetTotal)}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
 };
 
 export default function Dashboard({ userRole }: { userRole: Role }) {
-  if (userRole === 'community') return <CreatorHub />;
-  if (userRole === 'brand') return <BrandHub />;
-  if (userRole === 'staff') return <StaffDashboard />;
-  
-  return <div className="p-10 text-center">Dashboard not found.</div>; 
+    if (userRole === 'community') return <CreatorHub />;
+    if (userRole === 'brand') return <BrandHub />;
+    if (userRole === 'staff') return <StaffDashboard />;
+
+    return <div className="p-10 text-center">Dashboard not found.</div>;
 }
