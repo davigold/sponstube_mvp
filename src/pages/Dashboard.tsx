@@ -29,7 +29,7 @@ const BrandHub = () => {
     const pendingActions = campaigns.filter(c => c.status === 'awaiting_report' || c.status === 'applied').length;
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-8 duration-500">
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
@@ -161,7 +161,7 @@ const CreatorHub = () => {
     const actionItems = campaigns.filter(c => ['running', 'approved'].includes(c.status));
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-8 duration-500">
             {/* HEADER */}
             <div className="flex flex-col md:flex-row justify-between items-center gap-6 pb-6 border-b border-slate-200 dark:border-slate-800">
                 <div className="flex items-center gap-4 w-full md:w-auto">
