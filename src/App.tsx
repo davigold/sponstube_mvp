@@ -5,6 +5,7 @@ import FullApp from './pages/FullApp';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { DataProvider } from './contexts/DataContext';
 import { I18nProvider } from './contexts/I18nContext';
+import { CurrencyProvider } from './contexts/CurrencyContext';
 import ErrorBoundary from './components/ErrorBoundary';
 
 export default function App() {
@@ -12,11 +13,13 @@ export default function App() {
     <ErrorBoundary>
       <BrowserRouter>
         <I18nProvider>
-          <ThemeProvider>
-            <DataProvider>
-              <FullApp />
-            </DataProvider>
-          </ThemeProvider>
+          <CurrencyProvider>
+            <ThemeProvider>
+              <DataProvider>
+                <FullApp />
+              </DataProvider>
+            </ThemeProvider>
+          </CurrencyProvider>
         </I18nProvider>
       </BrowserRouter>
     </ErrorBoundary>
