@@ -1,129 +1,356 @@
-import React from 'react';
-import { LayoutDashboard, Users, Megaphone, ShoppingBag, Settings, RefreshCw, AlertCircle } from 'lucide-react';
-import { useData } from '../contexts/DataContext';
-import api from '../services/api';
 
-export default function SaaSApp() {
-    const { users, campaigns, loading, refreshData } = useData();
+import React, { useState, useEffect } from 'react';
+import Layout from '../components/Layout';
+import Auth from './Auth';
+import Onboarding from './Onboarding';
+import WowMoment from './WowMoment';
+import Dashboard from './Dashboard';
+import Storefronts from './Storefronts';
+import Marketplace from './Marketplace';
+import Campaigns from './Campaigns';
+import Management from './Management';
+import Payments from './Payments';
+import Settings from './Settings';
+import MGM from './MGM'; 
+import Templates from './Templates';
+import Reports from './Reports';
+import StaffDashboard from './StaffDashboard';
+import NotFound from './NotFound';
+import AccessDenied from './AccessDenied';
+import GeneralLanding from './landing/GeneralLanding';
+import BrandLanding from './landing/BrandLanding';
+import CommunityLanding from './landing/CommunityLanding';
+import PublicStorefrontPage from './PublicStorefrontPage';
+import { I18nProvider } from '../contexts/I18nContext';
+import { CurrencyProvider } from '../contexts/CurrencyContext';
+import { ThemeProvider } from '../contexts/ThemeContext';
+import { Role, User, BrandProfile, Community } from '../types';
+import { MOCK_COMMUNITIES } from '../mockData';
+import { navigateTo } from '../utils/navigation';
 
-    if (loading) {
-        return <div className="flex h-screen items-center justify-center text-slate-500">Carregando dados...</div>;
-    }
+type AppFlowState = 'AUTH' | 'ONBOARDING' | 'WOW' | 'APP';
+type PageRoute = 'dashboard' | 'marketplace' | 'campaigns' | 'management' | 'payments' | 'settings' | 'mgm' | 'storefront' | 'templates' | 'reports';
 
-    return (
-        <div className="flex h-screen bg-slate-50">
-            {/* Sidebar (Simplified) */}
-            <aside className="w-64 bg-slate-900 text-white hidden md:flex flex-col">
-                <div className="p-6 text-xl font-bold">Sponstube</div>
-                <nav className="flex-1 px-4 space-y-2">
-                    <a href="#" className="flex items-center gap-3 p-3 bg-slate-800 rounded-lg"><LayoutDashboard size={20} /> Dashboard</a>
-                    <a href="#" className="flex items-center gap-3 p-3 hover:bg-slate-800 rounded-lg text-slate-400"><Megaphone size={20} /> Campanhas</a>
-                    <a href="#" className="flex items-center gap-3 p-3 hover:bg-slate-800 rounded-lg text-slate-400"><span className="text-xl">$</span> Financeiro</a>
-                </nav>
-            </aside>
+const getPageFromPath = (path: string): PageRoute | null => {
+  // Extract the segment after /app/
+  const match = path.match(/\/app\/([^/?#]+)/);
+  if (!match) {
+    // If it's exactly /app or /app/, default to dashboard
+    if (path === '/app' || path === '/app/') return 'dashboard';
+    return null;
+  }
+  
+  const segment = match[1];
+  const validRoutes: PageRoute[] = ['dashboard', 'marketplace', 'campaigns', 'management', 'payments', 'settings', 'mgm', 'storefront', 'templates', 'reports'];
+  
+  if (validRoutes.includes(segment as PageRoute)) {
+    return segment as PageRoute;
+  }
+  
+  return null;
+};
 
-            <main className="flex-1 overflow-auto">
-                <header className="bg-white border-b px-8 py-4 flex justify-between items-center">
-                    <h1 className="text-2xl font-bold text-slate-800">Dashboard</h1>
-                    <div className="flex gap-4">
-                        <button onClick={refreshData} className="p-2 hover:bg-slate-100 rounded-full" title="Recarregar">
-                            <RefreshCw size={20} className="text-slate-600" />
-                        </button>
-                        <div className="h-10 w-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">DV</div>
-                    </div>
-                </header>
-
-                <div className="p-8">
-                    {/* Stats Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                        <StatCard icon={<Users className="text-blue-500" />} label="Usuários Totais" value={users.length} />
-                        <StatCard icon={<Megaphone className="text-purple-500" />} label="Campanhas Ativas" value={campaigns.filter(c => c.status === 'running').length} />
-                        <StatCard icon={<ShoppingBag className="text-green-500" />} label="Total de Campanhas" value={campaigns.length} />
-                        <StatCard icon={<Settings className="text-orange-500" />} label="Status do Sistema" value="Online" />
-                    </div>
-
-                    {/* Actions Grid */}
-                    <div className="mb-8 p-6 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-between">
-                        <div>
-                            <h3 className="font-bold text-blue-900">Teste de Integração (Stripe)</h3>
-                            <p className="text-blue-700 text-sm">Simule um depósito em Escrow para uma campanha.</p>
-                        </div>
-                        <button
-                            onClick={async () => {
-                                try {
-                                    const res = await api.post('/payments/checkout', { amount: 5000, currency: 'brl' });
-                                    if (res.data.url) window.location.href = res.data.url;
-                                    else alert('Modo Mock: Pagamento simulado com sucesso (Sem chave Stripe configurada)');
-                                } catch (e) {
-                                    alert('Erro ao iniciar pagamento');
-                                }
-                            }}
-                            className="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
-                        >
-                            Depositar R$ 50,00
-                        </button>
-                    </div>
-
-                    {/* Recent Campaigns Table */}
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                        <div className="px-6 py-4 border-b border-slate-100 flex justify-between">
-                            <h2 className="font-bold text-slate-800">Campanhas Recentes</h2>
-                        </div>
-                        {campaigns.length === 0 ? (
-                            <div className="p-8 text-center text-slate-500 flex flex-col items-center">
-                                <AlertCircle className="mb-2 h-8 w-8 text-slate-300" />
-                                <p>Nenhuma campanha encontrada no banco de dados.</p>
-                                <p className="text-sm mt-1">Certifique-se que o backend está rodando e conectado ao PostgreSQL.</p>
-                            </div>
-                        ) : (
-                            <table className="w-full text-left">
-                                <thead className="bg-slate-50 text-slate-500 text-sm">
-                                    <tr>
-                                        <th className="px-6 py-3 font-medium">Nome</th>
-                                        <th className="px-6 py-3 font-medium">Orçamento</th>
-                                        <th className="px-6 py-3 font-medium">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                    {campaigns.map(campaign => (
-                                        <tr key={campaign.id} className="hover:bg-slate-50">
-                                            <td className="px-6 py-4">{campaign.name}</td>
-                                            <td className="px-6 py-4">R$ {campaign.budgetTotal}</td>
-                                            <td className="px-6 py-4">
-                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(campaign.status)}`}>
-                                                    {campaign.status}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        )}
-                    </div>
-                </div>
-            </main>
-        </div>
-    );
+interface SaaSAppProps {
+  initialRoleParam?: Role;
+  initialAuthMode?: 'login' | 'signup';
+  currentPath: string;
 }
 
-function StatCard({ icon, label, value }: { icon: React.ReactNode, label: string, value: string | number }) {
-    return (
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
-            <div className="p-3 bg-slate-50 rounded-lg">{icon}</div>
-            <div>
-                <div className="text-slate-500 text-sm font-medium">{label}</div>
-                <div className="text-2xl font-bold text-slate-800">{value}</div>
-            </div>
-        </div>
-    );
-}
-
-function getStatusColor(status: string) {
-    switch (status) {
-        case 'running': return 'bg-green-100 text-green-700';
-        case 'applied': return 'bg-blue-100 text-blue-700';
-        case 'approved': return 'bg-purple-100 text-purple-700';
-        case 'completed': return 'bg-slate-100 text-slate-700';
-        default: return 'bg-gray-100 text-gray-700';
+const SaaSApp = ({ initialRoleParam, initialAuthMode, currentPath }: SaaSAppProps) => {
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const savedUser = localStorage.getItem('cm_user');
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch (e) {
+      console.error("Failed to load user from storage", e);
+      return null;
     }
+  });
+
+  const [currentRole, setCurrentRole] = useState<Role>(() => {
+    if (initialRoleParam) return initialRoleParam;
+    try {
+      const savedRole = localStorage.getItem('cm_role');
+      return (savedRole as Role) || 'brand';
+    } catch (e) {
+      return 'brand';
+    }
+  });
+
+  const [flowState, setFlowState] = useState<AppFlowState>(() => {
+    const savedUser = localStorage.getItem('cm_user');
+    if (!savedUser) return 'AUTH';
+    
+    try {
+      const u = JSON.parse(savedUser);
+      const onboarded = localStorage.getItem(`cm_onboarding_${u.id}`);
+      return onboarded === 'true' ? 'APP' : 'ONBOARDING';
+    } catch (e) {
+      return 'AUTH';
+    }
+  });
+
+  const currentPage = getPageFromPath(currentPath);
+
+  // --- AUTH GUARD ---
+  useEffect(() => {
+    // If trying to access app routes without user, redirect to Auth
+    if (!user && currentPath.startsWith('/app')) {
+      const returnTo = encodeURIComponent(currentPath);
+      navigateTo(`/auth?mode=login&returnTo=${returnTo}`);
+      setFlowState('AUTH');
+    }
+  }, [user, currentPath]);
+
+  useEffect(() => {
+    if (initialRoleParam) {
+      setCurrentRole(initialRoleParam);
+    }
+  }, [initialRoleParam]);
+
+  const handleLogin = (userData: User, isNewUser: boolean) => {
+    if (initialRoleParam && isNewUser) {
+        userData.role = initialRoleParam;
+    }
+    
+    setUser(userData);
+    setCurrentRole(userData.role);
+
+    localStorage.setItem('cm_user', JSON.stringify(userData));
+    localStorage.setItem('cm_role', userData.role);
+
+    // PR-2: Existing users skip onboarding
+    // If not a new user, we treat them as onboarded (and save state for reload)
+    if (!isNewUser) {
+        localStorage.setItem(`cm_onboarding_${userData.id}`, 'true');
+    }
+
+    // Check persistence to decide flow
+    const hasOnboarded = localStorage.getItem(`cm_onboarding_${userData.id}`) === 'true';
+
+    if (!hasOnboarded) {
+      setFlowState('ONBOARDING');
+    } else {
+      setFlowState('APP');
+      const params = new URLSearchParams(window.location.search);
+      const returnTo = params.get('returnTo');
+      if (returnTo && returnTo.startsWith('/app')) {
+        navigateTo(decodeURIComponent(returnTo));
+      } else {
+        navigateTo('/app/dashboard');
+      }
+    }
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setFlowState('AUTH');
+    localStorage.removeItem('cm_user');
+    localStorage.removeItem('cm_role');
+    navigateTo('/');
+  };
+
+  const handleOnboardingComplete = (data: Partial<BrandProfile> | Partial<Community>, draft?: any) => {
+    if (user) {
+        localStorage.setItem(`cm_onboarding_${user.id}`, 'true');
+        // In a real app, we would save 'data' and 'draft' to backend here.
+        console.log("Onboarding Saved:", data, draft);
+    }
+    setFlowState('APP');
+    navigateTo('/app/dashboard');
+  };
+
+  const handleRoleSwitch = (newRole: Role) => {
+    if (user) {
+      setCurrentRole(newRole);
+      localStorage.setItem('cm_role', newRole);
+      navigateTo('/app/dashboard');
+    }
+  };
+
+  const handleMenuNavigation = (page: string) => {
+    navigateTo(`/app/${page}`);
+  };
+
+  if (flowState === 'AUTH') {
+    const params = new URLSearchParams(window.location.search);
+    const returnTo = params.get('returnTo') || undefined;
+
+    return (
+      <Auth 
+        onLogin={handleLogin} 
+        initialMode={initialAuthMode || 'signup'} 
+        initialRole={initialRoleParam}
+        returnTo={returnTo}
+      />
+    );
+  }
+
+  if (flowState === 'ONBOARDING' && user) {
+    return (
+      <Onboarding 
+        userRole={currentRole} 
+        onComplete={handleOnboardingComplete} 
+      />
+    );
+  }
+
+  if (flowState === 'WOW' && user) {
+    // Deprecated step kept for compatibility if needed, though now Onboarding handles First Win.
+    // Mapping Onboarding Finish directly to APP in new logic.
+    return (
+      <WowMoment 
+        userRole={currentRole} 
+        onFinish={() => { setFlowState('APP'); navigateTo('/app/dashboard'); }} 
+      />
+    );
+  }
+
+  // --- ROUTE GUARD: NOT FOUND ---
+  if (!currentPage) {
+    return (
+      <Layout 
+        currentPage="404" 
+        onNavigate={handleMenuNavigation} 
+        currentRole={currentRole} 
+        onSwitchRole={handleRoleSwitch}
+        onLogout={handleLogout}
+      >
+        <NotFound />
+      </Layout>
+    );
+  }
+
+  const renderPage = () => {
+    if (currentRole === 'staff') {
+        switch (currentPage) {
+            case 'dashboard': return <StaffDashboard initialTab="overview" />;
+            case 'marketplace': return <StaffDashboard initialTab="users" />; 
+            case 'management': return <StaffDashboard initialTab="disputes" />; 
+            case 'mgm': return <StaffDashboard initialTab="mgm" />; 
+            case 'storefront': return <StaffDashboard initialTab="templates" />; 
+            case 'settings': return <StaffDashboard initialTab="config" />; 
+            case 'payments': return <Payments userRole={currentRole} />; 
+            case 'templates': return <Templates userRole={currentRole} />;
+            case 'reports': return <Reports userRole={currentRole} />;
+            default: return <AccessDenied />;
+        }
+    }
+
+    switch (currentPage) {
+      case 'dashboard': return <Dashboard userRole={currentRole} />;
+      case 'marketplace': return <Marketplace userRole={currentRole} />;
+      case 'campaigns': return <Campaigns userRole={currentRole} />;
+      case 'management': return <Management userRole={currentRole} />;
+      case 'payments': return <Payments userRole={currentRole} />;
+      case 'storefront': return <Storefronts userRole={currentRole} />;
+      case 'mgm': return <MGM />; 
+      case 'settings': return <Settings userRole={currentRole} />;
+      case 'templates': return <Templates userRole={currentRole} />;
+      case 'reports': return <Reports userRole={currentRole} />;
+      default: return <NotFound />;
+    }
+  };
+
+  return (
+    <Layout 
+      currentPage={currentPage} 
+      onNavigate={handleMenuNavigation} 
+      currentRole={currentRole} 
+      onSwitchRole={handleRoleSwitch}
+      onLogout={handleLogout}
+    >
+      {renderPage()}
+    </Layout>
+  );
+};
+
+export default function App() {
+  const [currentPath, setCurrentPath] = useState(window.location.pathname + window.location.search);
+
+  useEffect(() => {
+    const handleLocationChange = () => {
+      setCurrentPath(window.location.pathname + window.location.search);
+      window.scrollTo(0, 0);
+    };
+
+    const handleAppNavigate = (e: Event) => {
+        const customEvent = e as CustomEvent<{ path: string }>;
+        if (customEvent.detail?.path) {
+            setCurrentPath(customEvent.detail.path);
+            window.scrollTo(0, 0);
+        } else {
+            handleLocationChange();
+        }
+    };
+
+    window.addEventListener('popstate', handleLocationChange);
+    window.addEventListener('app-navigate', handleAppNavigate as EventListener);
+    
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+      window.removeEventListener('app-navigate', handleAppNavigate as EventListener);
+    };
+  }, []);
+
+  const renderRoute = () => {
+    const [pathname, search] = currentPath.split('?');
+    const path = pathname || '/';
+    const params = new URLSearchParams(search || window.location.search);
+
+    // Auth Routes
+    if (path.startsWith('/auth') || path.startsWith('/app')) {
+      let roleParam: Role | undefined;
+      const r = params.get('role');
+      if (r === 'brand' || r === 'community' || r === 'staff') {
+        roleParam = r as Role;
+      }
+
+      let authMode: 'login' | 'signup' | undefined;
+      const m = params.get('mode');
+      if (m === 'login' || m === 'signup') {
+        authMode = m as 'login' | 'signup';
+      }
+
+      return <SaaSApp initialRoleParam={roleParam} initialAuthMode={authMode} currentPath={currentPath} />;
+    }
+
+    // Public Storefront Routes
+    if (path.startsWith('/s/')) {
+      const slug = path.split('/s/')[1];
+      if (!slug) return <GeneralLanding />; 
+      
+      const isCommunity = MOCK_COMMUNITIES.some(c => c.slug === slug || c.id === slug);
+      const mode = isCommunity ? 'community' : 'brand';
+      return <PublicStorefrontPage mode={mode} slug={slug} />;
+    }
+
+    // Landing Pages
+    if (path === '/brands') return <BrandLanding />;
+    if (path === '/communities') return <CommunityLanding />;
+    if (path === '/') return <GeneralLanding />;
+    
+    // Global 404
+    return (
+      <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
+         <div className="text-center">
+            <h1 className="text-4xl font-bold mb-4">404</h1>
+            <p className="mb-8 text-slate-400">Page not found.</p>
+            <button onClick={() => navigateTo('/')} className="bg-indigo-600 px-6 py-2 rounded-full font-bold">Go Home</button>
+         </div>
+      </div>
+    );
+  };
+
+  return (
+    <ThemeProvider>
+      <I18nProvider>
+        <CurrencyProvider>
+          <div className="antialiased text-slate-900 dark:text-slate-200 bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors duration-300">
+            {renderRoute()}
+          </div>
+        </CurrencyProvider>
+      </I18nProvider>
+    </ThemeProvider>
+  );
 }
