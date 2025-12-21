@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  supabaseId String? @unique // Map to Supabase Auth table
+  name      String
+  email     String   @unique
+  role      String   // 'brand', 'community', 'staff'
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  
+  // Relations
+  brandProfile   BrandProfile?
+  communities    Community[]
+  integrations   SocialIntegration[]
+  payments       Payment[]
+}
+
+model BrandProfile {
+  id              String   @id @default(uuid())
+  companyName     String
+  industry        String
+  size            String
+  objectiveTags   String[]
+  toneOfVoice     String
+  city            String
+  country         String
+  description     String
+  
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id])
+  
+  campaigns       Campaign[]
+  brandPacks      BrandPack[]
+}
+
+model Community {
+  id                 String   @id @default(uuid())
+  name               String
+  slug               String   @unique
+  description        String
+  platforms          String[]
+  size               Int
+  engagementRate     Float
+  tags               String[]
+  verificationStatus String
+  city               String
+  country            String
+  
+  userId             String
+  user               User     @relation(fields: [userId], references: [id])
+  
+  offers             CommunityOffer[]
+}
+
+model Campaign {
+  id              String   @id @default(uuid())
+  name            String
+  status          String   // 'applied', 'approved', 'running', 'completed'
+  brief           String
+  budgetTotal     Float
+  createdAt       DateTime @default(now())
+  
+  brandId         String
+  brand           BrandProfile @relation(fields: [brandId], references: [id])
+}
+
+model CommunityOffer {
+  id              String   @id @default(uuid())
+  name            String
+  category        String
+  description     String
+  priceMin        Float
+  deliverables    String[]
+  platform        String
+  
+  communityId     String
+  community       Community @relation(fields: [communityId], references: [id])
+}
+
+model BrandPack {
+  id              String   @id @default(uuid())
+  name            String
+  objective       String
+  description     String
+  budgetMin       Float
+  
+  brandId         String
+  brand           BrandProfile @relation(fields: [brandId], references: [id])
+}
+
+model SocialIntegration {
+  id              String   @id @default(uuid())
+  platform        String   // 'youtube', 'instagram'
+  accessToken     String
+  refreshToken    String?
+  channelId       String?
+  channelName     String?
+  scopes          String[]
+  expiresAt       DateTime?
+  
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+}
+
+model Payment {
+  id              String   @id @default(uuid())
+  stripePaymentId String   @unique
+  amount          Float
+  currency        String
+  status          String   // 'pending', 'succeeded', 'failed'
+  createdAt       DateTime @default(now())
+  
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+}
